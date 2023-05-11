@@ -1,0 +1,8 @@
+# Add files here to ignore them from prettier formatting
+
+.next/
+.vercel/
+node_modules/
+serverless/
+/dist
+/coverage
