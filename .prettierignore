@@ -6,3 +6,4 @@ node_modules/
 serverless/
 /dist
 /coverage
+package-lock.json

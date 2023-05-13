@@ -2,7 +2,7 @@ import GitHubIcon from "@/components/GitHubIcon";
 
 export default function Footer() {
   return (
-    <footer className="footer footer-center p-4 container mx-auto gap-2 md:gap-4">
+    <footer className="hidden footer footer-center p-4 container mx-auto gap-2 md:gap-4">
       <div className="prose">
         <p>
           Copyright © 2023 - All right reserved -{" "}
@@ -28,7 +28,7 @@ export default function Footer() {
           </svg>
         </a>
         <a
-          href="https://github.com/fal-ai/edit-anything-app"
+          href="https://github.com/fal-ai/chat-with-fal-app"
           className="opacity-40 hover:opacity-70"
           target="_blank"
         >

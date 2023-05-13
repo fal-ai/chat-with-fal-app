@@ -1,3 +1,39 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.thinking {
+  display: flex;
+  justify-content: center;
+}
+
+.thinking span {
+  height: 0.3em;
+  width: 0.3em;
+  margin: 0 2px;
+  background-color: #ffffffb3;
+  border-radius: 50%;
+  display: inline-block;
+  vertical-align: middle;
+
+  animation: thinking 1s infinite ease-in-out both;
+}
+
+.thinking span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.thinking span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes thinking {
+  0%, 80%, 100% {
+    transform: scale(0.3);
+  }
+
+  40% {
+    transform: scale(1);
+  }
+}
+
