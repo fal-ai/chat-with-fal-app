@@ -1,7 +1,7 @@
 import Avatar from "@/components/Avatar";
+import Markdown from "@/components/Markdown";
 import { UserType } from "@/data/storage";
 import { PropsWithChildren, useEffect, useMemo, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
 
 export interface ChatProps {}
 
@@ -27,7 +27,7 @@ export function ChatBubble(props: PropsWithChildren<ChatBubbleProps>) {
         className={`chat-bubble flex-col ${bubbleOpacity} prose !prose-invert max-w-full min-w-[20%] md:max-w-[90%] lg:max-w-2xl`}
       >
         {typeof children === "string" ? (
-          <ReactMarkdown>{children}</ReactMarkdown>
+          <Markdown>{children}</Markdown>
         ) : (
           children
         )}

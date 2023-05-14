@@ -48,21 +48,22 @@ export default function Home() {
       ...prev,
       { text: prompt, user: "human", chatId: chat.id },
     ]);
+    const url = process.env.NEXT_PUBLIC_CHAT_FUNCTION_URL;
+    if (!url) {
+      throw new Error("API URL not set");
+    }
     try {
-      const response = await fetch(
-        "",
-        {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            "x-fal-key-id": "",
-            "x-fal-key-secret": "",
-          },
-          body: JSON.stringify({
-            prompt: buildPrompt(),
-          }),
-        }
-      );
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-fal-key-id": process.env.NEXT_PUBLIC_FAL_KEY_ID ?? "",
+          "x-fal-key-secret": process.env.NEXT_PUBLIC_FAL_KEY_SECRET ?? "",
+        },
+        body: JSON.stringify({
+          prompt: buildPrompt(),
+        }),
+      });
       if (!response.ok) {
         const content = await response.text();
         throw new Error(content);
