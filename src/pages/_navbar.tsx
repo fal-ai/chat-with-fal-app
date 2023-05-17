@@ -3,7 +3,7 @@ import { ChatBubbleBottomCenterTextIcon } from "@heroicons/react/24/outline";
 
 export default function NavBar() {
   return (
-    <div className="navbar bg-base-100 max-md:shadow-sm max-md:fixed max-md:top-0 z-50">
+    <div className="navbar bg-base-100 shadow-sm fixed top-0 z-50">
       <div className="container mx-auto">
         <div className="flex-1 max-md:flex-col">
           <a

@@ -1,33 +1,6 @@
 import { openDB } from "idb";
 import { ulid } from "ulidx";
-
-export interface SavedChat {
-  id: string;
-  createdAt: number;
-  updatedAt: number;
-}
-
-export type NewChat = Omit<SavedChat, "id" | "createdAt" | "updatedAt">;
-
-export type Chat = SavedChat | NewChat;
-
-export type UserType = "bot" | "human";
-
-interface SavedChatMessage {
-  id: string;
-  chatId: string;
-  text: string;
-  user: UserType;
-  createdAt: number;
-  updatedAt: number;
-}
-
-export type NewChatMessage = Omit<
-  SavedChatMessage,
-  "id" | "createdAt" | "updatedAt"
->;
-
-export type ChatMessage = SavedChatMessage | NewChatMessage;
+import type { Chat, ChatMessage, SavedChat, SavedChatMessage } from "./types";
 
 async function open() {
   return openDB("chat_with_fal_app", 1, {

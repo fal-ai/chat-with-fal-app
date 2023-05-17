@@ -1,164 +1,119 @@
-import {
-  ChatBubble,
-  ChatFetchStatus,
-  ChatStatus,
-  TypingChatBubble,
-} from "@/components/Chat";
-import { ChatMessage, SavedChat } from "@/data/storage";
+import ChatMessages from "@/components/ChatMessages";
+import { askBot, buildPrompt } from "@/data/client";
+import type { SendQuestionEvent } from "@/state/ChatState";
+import { chatMachine } from "@/state/ChatState";
+import { GlobalStateContext } from "@/state/global";
 import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
-import { useEffect, useMemo, useState } from "react";
+import { useActor, useInterpret } from "@xstate/react";
+import { KeyboardEvent, useMemo, useRef, useState } from "react";
 
 export default function Home() {
-  // TODO create this properly
-  const chat: SavedChat = {
-    id: "1",
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  };
-  const [answer, setAnswer] = useState<string[]>([]);
-  const [prompt, setPrompt] = useState<string>("");
-  const [status, setStatus] = useState<ChatFetchStatus>("idle");
-  const [typingStatus, setTypingStatus] = useState<ChatStatus>("done");
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [prompt, setPrompt] = useState("");
+  const promptInputRef = useRef<HTMLInputElement>(null);
 
-  const updateAnswer = (value: string) => {
-    setAnswer((prev) => [...prev, value]);
-  };
-
-  const buildPrompt = () => {
-    let memory = messages
-      .map((message) => {
-        if (message.user === "human") {
-          return `I previously asked: ${message.text}\n`;
+  const chatService = useInterpret(chatMachine, {
+    actions: {
+      sendQuestion: async (context, event: SendQuestionEvent) => {
+        try {
+          const { messages } = context;
+          const { prompt } = event;
+          const answer = await askBot({
+            prompt: buildPrompt(prompt, messages),
+            onAnswerUpdate(chunk, aggregate) {
+              send({
+                type: "RECEIVE_PARTIAL_RESPONSE",
+                chunk,
+                answer: aggregate,
+              });
+            },
+          });
+          send({ type: "RECEIVE_FULL_RESPONSE", answer });
+        } catch (error: any) {
+          send({ type: "RECEIVE_ERROR", error });
         }
-        return `You then answered: ${message.text}\n`;
-      })
-      .join("\n");
-    if (memory.trim().length > 0) {
-      memory = `Given the previous conversation where ${memory}\n\n`;
-    }
-    return `USER: ${memory}I want to ask now: ${prompt}\nASSISTANT:`;
-  };
-
-  const handleClick = async () => {
-    setPrompt("");
-    setStatus("loading");
-    setTypingStatus("thinking");
-    setMessages((prev) => [
-      ...prev,
-      { text: prompt, user: "human", chatId: chat.id },
-    ]);
-    const url = process.env.NEXT_PUBLIC_CHAT_FUNCTION_URL;
-    if (!url) {
-      throw new Error("API URL not set");
-    }
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "x-fal-key-id": process.env.NEXT_PUBLIC_FAL_KEY_ID ?? "",
-          "x-fal-key-secret": process.env.NEXT_PUBLIC_FAL_KEY_SECRET ?? "",
-        },
-        body: JSON.stringify({
-          prompt: buildPrompt(),
-        }),
-      });
-      if (!response.ok) {
-        const content = await response.text();
-        throw new Error(content);
-      }
-
-      const body = response.body;
-      if (!body) {
-        throw new Error("No body");
-      }
-
-      const reader = body.getReader();
-
-      let isStreaming = true;
-      const decoder = new TextDecoder();
-      while (isStreaming) {
-        const { done, value } = await reader.read();
-
-        isStreaming = !done;
-        if (value) {
-          setTypingStatus("typing");
-          updateAnswer(decoder.decode(value));
+      },
+      focusOnInput: () => {
+        // TODO I'm sure there's a better way of doing this...
+        if (promptInputRef.current) {
+          const input = promptInputRef.current;
+          setTimeout(() => {
+            input.focus();
+          }, 200);
         }
-      }
-    } catch (error) {
-      console.error(error);
-      setTypingStatus("done");
-    } finally {
-      setStatus("idle");
+      },
+      clearPrompt: () => {
+        setPrompt("");
+      },
+    },
+  });
+  const [state, send] = useActor(chatService);
+  const { messages } = state.context;
+
+  const handleEnterPress = async (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      await sendQuestion();
     }
   };
 
-  // TODO change this to use a proper state machine
-  useEffect(() => {
-    if (status === "idle" && answer.length > 0 && typingStatus === "done") {
-      setMessages((prev) => [
-        ...prev,
-        { text: answer.join(""), user: "bot", chatId: chat.id },
-      ]);
-      setAnswer([]);
-    }
-  }, [status, answer, chat.id, typingStatus]);
-
-  const handleTypingDone = () => {
-    setTypingStatus("done");
+  const sendQuestion = async () => {
+    send({ type: "SEND_QUESTION", prompt });
   };
 
-  const isLoading = useMemo(
-    () => status === "loading" || typingStatus !== "done",
-    [status, typingStatus]
-  );
+  const isLoading =
+    state.matches("botAnswering.thinking") ||
+    state.matches("botAnswering.typing");
 
-  const hasPrompt = useMemo(() => prompt.length === 0, [prompt]);
+  const hasPrompt = useMemo(() => prompt.trim().length > 0, [prompt]);
+  const promptPlaceholder = useMemo(() => {
+    if (isLoading) {
+      return "Wait for the answer...";
+    }
+    if (messages.length > 0) {
+      return "Ask a follow-up question...";
+    }
+    return "Ask me a question...";
+  }, [isLoading, messages]);
 
   const buttonIconColor = useMemo(() => {
-    return isLoading || hasPrompt
+    return isLoading || !hasPrompt
       ? "stroke-gray-700 dark:stroke-neutral-200 opacity-30"
       : "stroke-secondary";
   }, [isLoading, hasPrompt]);
   return (
-    <main className="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-h-screen h-screen overflow-y-hidden">
-      <div className="relative flex-1 w-full md:col-span-3 md:px-16 lg:px-28 xl:px-32 max-md:overflow-y-scroll p-4 pb-20 mt-16 z-10">
-        {messages.map((message, index) => (
-          <ChatBubble key={index} user={message.user}>
-            {message.text}
-          </ChatBubble>
-        ))}
-        {isLoading && (
-          <TypingChatBubble
-            content={answer.join("")}
-            onDone={handleTypingDone}
-            status={typingStatus}
-          />
-        )}
-      </div>
-      <div className="fixed bottom-0 w-full max-w-screen z-50">
-        <div className="container flex justify-between space-x-2 bg-base-100 max-md:shadow-sm px-4 py-2">
-          <input
-            className="input input-ghost px-0 flex-1"
-            type="text"
-            autoComplete="off"
-            placeholder="Hi! Ask me something"
-            name="prompt"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            disabled={isLoading}
-          />
-          <button
-            className="btn btn-ghost rounded-full self-end"
-            onClick={handleClick}
-            disabled={isLoading || hasPrompt}
-          >
-            <PaperAirplaneIcon className={`${buttonIconColor} w-6 h-6`} />
-          </button>
+    <GlobalStateContext.Provider value={{ chatService }}>
+      <main className="gap-8 w-full max-h-screen min-h-screen pt-16 pb-20">
+        <ChatMessages messages={messages} />
+        <div className="fixed bottom-0 bg-base-100 w-full max-w-screen z-50">
+          <div className="container mx-auto flex-col px-4 py-2">
+            <div className="flex justify-between space-x-2">
+              <input
+                className="input bg-base-200 focus:outline-transparent disabled:border-transparent disabled:placeholder:opacity-80 flex-1"
+                ref={promptInputRef}
+                autoComplete="off"
+                placeholder={promptPlaceholder}
+                name="prompt"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                onKeyDown={handleEnterPress}
+                enterKeyHint="send"
+                disabled={isLoading}
+              />
+              <button
+                className="btn btn-ghost disabled:bg-transparent hover:bg-transparent rounded-full self-end"
+                onClick={sendQuestion}
+                disabled={isLoading || !hasPrompt}
+              >
+                <PaperAirplaneIcon className={`${buttonIconColor} w-6 h-6`} />
+              </button>
+            </div>
+            {/* I had this, then decide to hide it, should delete or unhide it */}
+            <p className="hidden prose text-sm mt-2 opacity-80">
+              Press <kbd>Enter</kbd> to send.
+            </p>
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </GlobalStateContext.Provider>
   );
 }
