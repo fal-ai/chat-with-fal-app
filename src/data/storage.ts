@@ -1,6 +1,6 @@
 import { openDB } from "idb";
 import { ulid } from "ulidx";
-import type { Chat, ChatMessage, SavedChat, SavedChatMessage } from "./types";
+import type { Chat, Message, SavedChat, SavedMessage } from "./types";
 
 async function open() {
   return openDB("chat_with_fal_app", 1, {
@@ -24,7 +24,7 @@ async function getAllChats(): Promise<Chat[]> {
   return chats;
 }
 
-async function getMessagesFromChat(chatId: string): Promise<ChatMessage[]> {
+async function getMessagesFromChat(chatId: string): Promise<Message[]> {
   const db = await open();
   const messages = await db.getAllFromIndex(
     "chat_messages",
@@ -49,9 +49,9 @@ export async function saveChat(chat: Chat): Promise<SavedChat> {
 }
 
 export async function saveMessage(
-  message: ChatMessage
-): Promise<SavedChatMessage> {
-  const savedMessage: SavedChatMessage = {
+  message: Message
+): Promise<SavedMessage> {
+  const savedMessage: SavedMessage = {
     id: ulid(),
     createdAt: Date.now(),
     ...message,

@@ -1,11 +1,11 @@
-import { Chat, ChatMessage, NewChatMessage } from "@/data/types";
+import { Chat, Message, NewMessage } from "@/data/types";
 import { assign, createMachine } from "xstate";
 
 interface ChatContext {
   currentChat?: Chat;
-  messages: ChatMessage[];
+  messages: Message[];
   requestComplete: boolean;
-  currentMessage?: ChatMessage;
+  currentMessage?: Message;
   error?: Error | string;
 }
 
@@ -119,8 +119,8 @@ export const chatMachine = createMachine<ChatContext, ChatEvent>(
       addQuestion: assign((context, event: SendQuestionEvent) => ({
         messages: [
           ...context.messages,
-          { text: event.prompt, user: "human" } as NewChatMessage,
-          { text: "", user: "bot" } as NewChatMessage,
+          { text: event.prompt, user: "human" } as NewMessage,
+          { text: "", user: "bot" } as NewMessage,
         ],
       })),
       markRequestAsComplete: assign(() => ({
