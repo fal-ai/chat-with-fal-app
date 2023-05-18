@@ -6,7 +6,7 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head />
-      <body className="theme bg-base-300 overflow-y-hidden">
+      <body className="theme bg-base-200 min-h-screen">
         <NavBar />
         <Main />
         <Footer />

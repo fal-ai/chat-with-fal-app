@@ -16,9 +16,13 @@ export default function Home() {
       sendQuestion: async (context, event: SendQuestionEvent) => {
         try {
           const { messages } = context;
+
+          // disregard the last two messages, which are the prompt itself
+          // and the answer in progress
+          const previousMessages = messages.slice(0, -2);
           const { prompt } = event;
           const answer = await askBot({
-            prompt: buildPrompt(prompt, messages),
+            prompt: buildPrompt(prompt, previousMessages),
             onAnswerUpdate(chunk, aggregate) {
               send({
                 type: "RECEIVE_PARTIAL_RESPONSE",
@@ -34,12 +38,13 @@ export default function Home() {
       },
       focusOnInput: () => {
         // TODO I'm sure there's a better way of doing this...
-        if (promptInputRef.current) {
-          const input = promptInputRef.current;
-          setTimeout(() => {
-            input.focus();
-          }, 200);
-        }
+        // Also disabled because it brings up the keyboard on mobile
+        // if (promptInputRef.current) {
+        //   const input = promptInputRef.current;
+        //   setTimeout(() => {
+        //     input.focus();
+        //   }, 200);
+        // }
       },
       clearPrompt: () => {
         setPrompt("");
@@ -67,12 +72,12 @@ export default function Home() {
   const hasPrompt = useMemo(() => prompt.trim().length > 0, [prompt]);
   const promptPlaceholder = useMemo(() => {
     if (isLoading) {
-      return "Wait for the answer...";
+      return "Wait for the reply...";
     }
     if (messages.length > 0) {
-      return "Ask a follow-up question...";
+      return "Send a follow-up...";
     }
-    return "Ask me a question...";
+    return "Send a message...";
   }, [isLoading, messages]);
 
   const buttonIconColor = useMemo(() => {
@@ -82,35 +87,42 @@ export default function Home() {
   }, [isLoading, hasPrompt]);
   return (
     <GlobalStateContext.Provider value={{ chatService }}>
-      <main className="gap-8 w-full max-h-screen min-h-screen pt-16 pb-20">
-        <ChatMessages messages={messages} />
-        <div className="fixed bottom-0 bg-base-100 w-full max-w-screen z-50">
-          <div className="container mx-auto flex-col px-4 py-2">
-            <div className="flex justify-between space-x-2">
-              <input
-                className="input bg-base-200 focus:outline-transparent disabled:border-transparent disabled:placeholder:opacity-80 flex-1"
-                ref={promptInputRef}
-                autoComplete="off"
-                placeholder={promptPlaceholder}
-                name="prompt"
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                onKeyDown={handleEnterPress}
-                enterKeyHint="send"
-                disabled={isLoading}
-              />
-              <button
-                className="btn btn-ghost disabled:bg-transparent hover:bg-transparent rounded-full self-end"
-                onClick={sendQuestion}
-                disabled={isLoading || !hasPrompt}
-              >
-                <PaperAirplaneIcon className={`${buttonIconColor} w-6 h-6`} />
-              </button>
+      <main className="overflow-hidden w-full h-full relative flex z-0">
+        <div className="relative flex h-full max-w-full flex-1 overflow-hidden">
+          <div className="container w-full min-h-full mx-auto">
+            <ChatMessages messages={messages} />
+            {/* <div className="h-32 w-full"></div> */}
+            <div className="fixed md:max-w-screen-2xl bottom-0 w-full z-50">
+              <div className="flex-col bg-base-100 max-md:show-m px-4 py-2 md:py-6">
+                <div className="flex justify-between space-x-2">
+                  <input
+                    className="input bg-base-200 focus:outline-transparent disabled:border-transparent disabled:placeholder:opacity-80 flex-1 md:text-lg md:py-8"
+                    ref={promptInputRef}
+                    autoComplete="off"
+                    placeholder={promptPlaceholder}
+                    name="prompt"
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    onKeyDown={handleEnterPress}
+                    enterKeyHint="send"
+                    disabled={isLoading}
+                  />
+                  <button
+                    className="btn btn-ghost disabled:bg-transparent hover:bg-transparent rounded-full self-end"
+                    onClick={sendQuestion}
+                    disabled={isLoading || !hasPrompt}
+                  >
+                    <PaperAirplaneIcon
+                      className={`${buttonIconColor} w-6 h-6`}
+                    />
+                  </button>
+                </div>
+                {/* I had this, then decide to hide it, should delete or unhide it */}
+                <p className="hidden prose text-sm mt-2 opacity-80">
+                  Press <kbd>Enter</kbd> to send.
+                </p>
+              </div>
             </div>
-            {/* I had this, then decide to hide it, should delete or unhide it */}
-            <p className="hidden prose text-sm mt-2 opacity-80">
-              Press <kbd>Enter</kbd> to send.
-            </p>
           </div>
         </div>
       </main>

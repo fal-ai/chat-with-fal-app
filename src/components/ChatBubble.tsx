@@ -5,6 +5,7 @@ import { isFullResponse, isPartialResponse } from "@/state/ChatState";
 import { GlobalStateContext } from "@/state/global";
 import { useActor } from "@xstate/react";
 import {
+  memo,
   PropsWithChildren,
   useContext,
   useEffect,
@@ -27,25 +28,35 @@ export interface ChatBubbleProps {
 export function ChatBubble(props: PropsWithChildren<ChatBubbleProps>) {
   const { children, user } = props;
 
-  const bubbleOpacity = useMemo(() => {
-    return user === "bot" ? "bg-opacity-100" : "bg-opacity-70";
-  }, [user]);
-  const position = user === "bot" ? "chat-start" : "chat-end";
+  const content = useMemo(() => {
+    return typeof children === "string" ? (
+      <Markdown>{children}</Markdown>
+    ) : (
+      children
+    );
+  }, [children]);
+
+  if (user === "bot") {
+    return <div className="prose max-w-full md:text-lg">{content}</div>;
+  }
+
   return (
-    <div className={`chat ${position} py-4`}>
-      <Avatar user={props.user} className="chat-image" />
-      <div
-        className={`chat-bubble flex-col ${bubbleOpacity} prose !prose-invert max-w-full min-w-[10%] md:max-w-4xl lg:max-w-6xl`}
-      >
-        {typeof children === "string" ? (
-          <Markdown>{children}</Markdown>
-        ) : (
-          children
-        )}
+    <div className="flex flex-row">
+      <Avatar
+        user={props.user}
+        className="chat-image self-start mr-2 md:mr-4"
+      />
+      <div className="flex flex-col bg-base-content dark:bg-black dark:bg-opacity-30 py-4 pl-6 pr-4 prose !prose-invert rounded-r-3xl rounded-bl-3xl mt-6 font-medium md:text-lg max-w-fit md:mr-64 lg:mr-80">
+        {content}
       </div>
     </div>
   );
 }
+
+export const MemoizedChatBubble = memo(
+  ChatBubble,
+  (prevProps, nextProps) => prevProps.children === nextProps.children
+);
 
 export interface TypingChatBubbleProps {
   content: string;
@@ -68,11 +79,9 @@ export function TypingChatBubble(props: TypingChatBubbleProps) {
   useEffect(() => {
     chatService.onEvent((event: any) => {
       if (isPartialResponse(event)) {
-        console.log("==== on partial response", event);
         setContentToType((prevContent) => prevContent + event.chunk);
       }
       if (isFullResponse(event)) {
-        console.log("==== on full response", event);
         setIsContentFullyLoaded(true);
         setContentToType(event.answer);
       }
@@ -84,8 +93,6 @@ export function TypingChatBubble(props: TypingChatBubbleProps) {
 
     const intervalId = setInterval(() => {
       let i = cursorPosition.current;
-      console.log("typing cursor at", i);
-
       setContent(contentToType.slice(0, i));
 
       // TODO increment cursor position depending on the content left and whether it's done or not
@@ -103,58 +110,15 @@ export function TypingChatBubble(props: TypingChatBubbleProps) {
   }, [contentToType, isContentFullyLoaded]);
 
   useEffect(() => {
-    console.log("==== is typing done?", isTyping);
     if (isContentFullyLoaded && !isTyping) {
-      console.log("==== TYPING DONE");
       setContent(contentToType);
       chatService.send({ type: "TYPING_DONE", answer: contentToType });
     }
   }, [isContentFullyLoaded, isTyping, chatService, contentToType]);
 
-  // useMemo(() => {
-
-  // });
-
-  // const typeNext = (content: string[]) => {
-  //   const lastIndex = content.length - 1;
-  //   setCurrentContent((prevContent) => Math.min(lastIndex, prevContent + 1));
-  // };
-
-  // useEffect(() => {
-  //   typeNext(contentToType);
-  // }, [contentToType]);
-
-  // useEffect(() => {
-  //   const typewriter = typewriterRef.current;
-  //   if (typewriter && !isTyping) {
-  //     typewriter
-  //       .typeString(contentToType[currentContent])
-  //       .start()
-  //       .callFunction(() => {
-  //         setIsTyping(false);
-  //         // typeNext(contentToType);
-  //       });
-  //   }
-  // }, [isTyping, currentContent, contentToType]);
-
   let children: React.ReactNode = content;
   if (state.matches("botAnswering.thinking")) {
-    console.log("--> Rendering ThinkingAnimation");
     children = <ThinkingAnimation />;
   }
-  // if (state.matches("botAnswering.typing")) {
-  //   console.log("--> Rendering Typewriter");
-  //   children = (
-  //     <Typewriter
-  //       options={{
-  //         delay: 16,
-  //       }}
-  //       onInit={(typewriter) => {
-  //         typewriterRef.current = typewriter;
-  //       }}
-  //     />
-  //   );
-  // }
-  console.log("!! Rendering TypingChatBubble!!");
   return <ChatBubble user="bot">{children}</ChatBubble>;
 }

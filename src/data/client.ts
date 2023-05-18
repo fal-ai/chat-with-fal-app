@@ -12,18 +12,22 @@ export function buildPrompt(prompt: string, messages: ChatMessage[]): string {
     .map((message, index) => {
       if (message.user === "human") {
         if (index === 0) {
-          return `I asked: ${message.text}\n`;
+          return `I asked you the following: ${message.text}\n`;
         }
         return `Then I followed up with: ${message.text}\n`;
       }
 
-      return `You then answered: ${message.text}\n`;
+      return `Then you answered with: ${message.text}\n`;
     })
     .join("\n");
   if (memory.trim().length > 0) {
-    memory = `Given the previous conversation where ${memory}\n\n`;
+    memory = `Let's continue our previous conversation where ${memory}`;
+    memory += "\nNow I want to follow-up with:";
   }
-  return `USER: ${memory}I want to ask now: ${prompt}\nASSISTANT:`;
+  if (memory.trim().length === 0) {
+    memory = memory.trim();
+  }
+  return `USER: ${memory}${prompt}\nASSISTANT:`;
 }
 
 /**

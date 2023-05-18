@@ -11,7 +11,7 @@
   height: 0.25em;
   width: 0.25em;
   margin: 0 2px;
-  background-color: #ffffffb3;
+  background-color: currentColor;
   border-radius: 50%;
   display: inline-block;
   vertical-align: middle;
@@ -34,6 +34,12 @@
 
   40% {
     transform: scale(1);
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  .thinking span {
+    background-color: currentColor;
   }
 }
 
