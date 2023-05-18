@@ -1,14 +1,14 @@
-import { ChatMessage } from "@/data/types";
+import { Message } from "@/data/types";
 import { GlobalStateContext } from "@/state/global";
 import { useActor } from "@xstate/react";
 import { useContext, useEffect, useRef } from "react";
 import {
-  MemoizedChatBubble as ChatBubble,
-  TypingChatBubble,
-} from "./ChatBubble";
+  MemoizedChatMessage as ChatMessage,
+  TypingChatMessage,
+} from "./ChatMessage";
 
 export type ChatMessagesProps = {
-  messages: ChatMessage[];
+  messages: Message[];
 };
 
 export default function ChatMessages(props: ChatMessagesProps) {
@@ -31,19 +31,19 @@ export default function ChatMessages(props: ChatMessagesProps) {
     }
   }, []);
 
-  const renderMessage = (message: ChatMessage, index: number) => {
+  const renderMessage = (message: Message, index: number) => {
     const isLastMessage = index === messages.length - 1;
     if (
       isLastMessage &&
       message.user === "bot" &&
       state.matches("botAnswering")
     ) {
-      return <TypingChatBubble key={index} content={message.text} />;
+      return <TypingChatMessage key={index} content={message.text} />;
     }
     return (
-      <ChatBubble key={index} user={message.user}>
+      <ChatMessage key={index} user={message.user}>
         {message.text}
-      </ChatBubble>
+      </ChatMessage>
     );
   };
 

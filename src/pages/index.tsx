@@ -1,11 +1,11 @@
 import ChatMessages from "@/components/ChatMessages";
-import { askBot, buildPrompt } from "@/data/client";
+import { askBot, buildPrompt, wakeUp } from "@/data/client";
 import type { SendQuestionEvent } from "@/state/ChatState";
 import { chatMachine } from "@/state/ChatState";
 import { GlobalStateContext } from "@/state/global";
 import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
 import { useActor, useInterpret } from "@xstate/react";
-import { KeyboardEvent, useMemo, useRef, useState } from "react";
+import { KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 
 export default function Home() {
   const [prompt, setPrompt] = useState("");
@@ -53,6 +53,10 @@ export default function Home() {
   });
   const [state, send] = useActor(chatService);
   const { messages } = state.context;
+
+  useEffect(() => {
+    wakeUp();
+  }, []);
 
   const handleEnterPress = async (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {

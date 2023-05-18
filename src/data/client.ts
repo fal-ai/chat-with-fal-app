@@ -1,4 +1,4 @@
-import { ChatMessage } from "./types";
+import { Message } from "./types";
 
 type OnAnswerUpdate = (chunk: string, aggregate: string) => void;
 
@@ -7,7 +7,7 @@ export type AskBotInput = {
   onAnswerUpdate: OnAnswerUpdate;
 };
 
-export function buildPrompt(prompt: string, messages: ChatMessage[]): string {
+export function buildPrompt(prompt: string, messages: Message[]): string {
   let memory = messages
     .map((message, index) => {
       if (message.user === "human") {
@@ -31,11 +31,12 @@ export function buildPrompt(prompt: string, messages: ChatMessage[]): string {
 }
 
 /**
- *
- * @param prompt
- * @param onAnswerUpdate
- * @returns
- * @see chat.py: underlying implementation at `/fal_serverless/chat.py`
+ * Sends the request to the fal-serverless function that interacts with
+ * the LLM selected model, only `TheBloke/vicuna-13B-1.1-HF` is supportted for now.
+ * @param prompt the user prompt
+ * @param onAnswerUpdate callback that will be called as the answer is being streamed
+ * @returns the final answer from the model.
+ * @see `chat.py` (underlying implementation at `/fal_serverless/chat.py`)
  */
 export async function askBot({
   prompt,
@@ -82,4 +83,13 @@ export async function askBot({
     }
   }
   return answer;
+}
+
+/**
+ * This is not an ideal implementation of a warm-up function, so the bot is started
+ * before the first message is submitted. Once the model implementation is improved,
+ * this function should be removed or replaced with a proper cache warm-up implementation.
+ */
+export async function wakeUp() {
+  return askBot({ prompt: "Hello!", onAnswerUpdate: () => {} });
 }

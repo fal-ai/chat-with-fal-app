@@ -5,13 +5,15 @@ export interface SavedChat {
   updatedAt: number;
 }
 
-export type NewChat = Omit<SavedChat, "id" | "createdAt" | "updatedAt">;
+type GeneratedProps = "id" | "createdAt" | "updatedAt";
+
+export type NewChat = Omit<SavedChat, GeneratedProps>;
 
 export type Chat = SavedChat | NewChat;
 
 export type UserType = "bot" | "human";
 
-export interface SavedChatMessage {
+export interface SavedMessage {
   id: string;
   chatId: string;
   text: string;
@@ -20,9 +22,6 @@ export interface SavedChatMessage {
   updatedAt: number;
 }
 
-export type NewChatMessage = Omit<
-  SavedChatMessage,
-  "id" | "createdAt" | "updatedAt"
->;
+export type NewMessage = Omit<SavedMessage, GeneratedProps>;
 
-export type ChatMessage = SavedChatMessage | NewChatMessage;
+export type Message = SavedMessage | NewMessage;

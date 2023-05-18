@@ -21,11 +21,11 @@ export type ChatStatus = "thinking" | "typing" | "done";
 
 export type ChatFetchStatus = "idle" | "loading" | "error";
 
-export interface ChatBubbleProps {
+export interface ChatMessageProps {
   user: UserType;
 }
 
-export function ChatBubble(props: PropsWithChildren<ChatBubbleProps>) {
+export function ChatMessage(props: PropsWithChildren<ChatMessageProps>) {
   const { children, user } = props;
 
   const content = useMemo(() => {
@@ -53,16 +53,16 @@ export function ChatBubble(props: PropsWithChildren<ChatBubbleProps>) {
   );
 }
 
-export const MemoizedChatBubble = memo(
-  ChatBubble,
+export const MemoizedChatMessage = memo(
+  ChatMessage,
   (prevProps, nextProps) => prevProps.children === nextProps.children
 );
 
-export interface TypingChatBubbleProps {
+export interface TypingChatMessageProps {
   content: string;
 }
 
-export function TypingChatBubble(props: TypingChatBubbleProps) {
+export function TypingChatMessage(props: TypingChatMessageProps) {
   // Shared state
   const { chatService } = useContext(GlobalStateContext);
   const [state] = useActor(chatService);
@@ -120,5 +120,5 @@ export function TypingChatBubble(props: TypingChatBubbleProps) {
   if (state.matches("botAnswering.thinking")) {
     children = <ThinkingAnimation />;
   }
-  return <ChatBubble user="bot">{children}</ChatBubble>;
+  return <ChatMessage user="bot">{children}</ChatMessage>;
 }

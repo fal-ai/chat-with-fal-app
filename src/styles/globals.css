@@ -36,10 +36,3 @@
     transform: scale(1);
   }
 }
-
-@media (prefers-color-scheme: light) {
-  .thinking span {
-    background-color: currentColor;
-  }
-}
-
