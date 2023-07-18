@@ -1,49 +1,22 @@
 import type { NextApiHandler, PageConfig } from "next";
 
+const url = process.env.NEXT_PUBLIC_CHAT_FUNCTION_URL ?? "";
+
 const handler: NextApiHandler = async (request, response) => {
   if (request.method !== "POST" && request.method !== "OPTIONS") {
     response.status(405).json({ message: "Method not allowed" });
     return;
   }
 
-  const url = process.env.CHAT_FUNCTION_URL ?? "";
-  console.log("url", url);
-
-  const decoder = new TextDecoder();
   const res = await fetch(url, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
-      "x-fal-key-id": process.env.FAL_KEY_ID ?? "",
-      "x-fal-key-secret": process.env.FAL_KEY_SECRET ?? "",
+      "content-type": "application/json",
     },
-    body: request.body,
+    body: JSON.stringify(request.body),
   });
-  console.log("response status", res.status, res.statusText);
-  if (!res.ok) {
-    const text = await res.text();
-    response
-      .status(res.status)
-      .json({ message: text, statusText: res.statusText });
-    return;
-  }
-
-  const readableStream = new ReadableStream({
-    async start(controller) {
-      for await (const chunk of res.body as any) {
-        console.log("chunk", chunk);
-        controller.enqueue(decoder.decode(chunk));
-      }
-    },
-  });
-
-  return new Response(readableStream, {
-    headers: { "Content-Type": "text/event-stream" },
-  });
-};
-
-export const config: PageConfig = {
-  runtime: "edge",
+  const result = await res.json();
+  response.status(200).json(result);
 };
 
 export default handler;

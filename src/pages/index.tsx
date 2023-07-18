@@ -54,9 +54,9 @@ export default function Home() {
   const [state, send] = useActor(chatService);
   const { messages } = state.context;
 
-  useEffect(() => {
-    wakeUp();
-  }, []);
+  // useEffect(() => {
+  //   wakeUp();
+  // }, []);
 
   const handleEnterPress = async (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {

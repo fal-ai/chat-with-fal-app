@@ -46,42 +46,35 @@ export async function askBot({
   if (!url) {
     throw new Error("API URL not set");
   }
-  const response = await fetch(url, {
+
+  const input = {
+    messages: [
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+    stream: false,
+    model: "gpt-3.5-turbo",
+    max_tokens: 2000,
+  };
+  const response = await fetch("/api/chat", {
     method: "POST",
     headers: {
+      accept: "application/json",
       "content-type": "application/json",
-      "x-fal-key-id": process.env.NEXT_PUBLIC_FAL_KEY_ID ?? "",
-      "x-fal-key-secret": process.env.NEXT_PUBLIC_FAL_KEY_SECRET ?? "",
     },
-    body: JSON.stringify({
-      prompt,
-    }),
+    body: JSON.stringify(input),
   });
   if (!response.ok) {
     const content = await response.text();
     throw new Error(content);
   }
-
-  const body = response.body;
-  if (!body) {
-    throw new Error("No body");
-  }
-
-  const reader = body.getReader();
-
-  let isStreaming = true;
-  const decoder = new TextDecoder();
-  let answer = "";
-  while (isStreaming) {
-    const { done, value } = await reader.read();
-
-    isStreaming = !done;
-    if (value) {
-      const chunk = decoder.decode(value);
-      answer += chunk;
-      onAnswerUpdate(chunk, answer);
-    }
-  }
+  const result = await response.json();
+  const answer = result.choices
+    .map((choice: any) => choice.message.content)
+    .join("\n");
+  onAnswerUpdate(answer, answer);
   return answer;
 }
 
