@@ -48,9 +48,7 @@ export async function saveChat(chat: Chat): Promise<SavedChat> {
   return savedChat;
 }
 
-export async function saveMessage(
-  message: Message
-): Promise<SavedMessage> {
+export async function saveMessage(message: Message): Promise<SavedMessage> {
   const savedMessage: SavedMessage = {
     id: ulid(),
     createdAt: Date.now(),
