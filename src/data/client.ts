@@ -3,31 +3,25 @@ import { Message } from "./types";
 type OnAnswerUpdate = (chunk: string, aggregate: string) => void;
 
 export type AskBotInput = {
-  prompt: string;
+  prompt: PromptMessage[];
   onAnswerUpdate: OnAnswerUpdate;
 };
 
-export function buildPrompt(prompt: string, messages: Message[]): string {
-  let memory = messages
-    .map((message, index) => {
-      if (message.user === "human") {
-        if (index === 0) {
-          return `I asked you the following: ${message.text}\n`;
-        }
-        return `Then I followed up with: ${message.text}\n`;
-      }
+type PromptMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
 
-      return `Then you answered with: ${message.text}\n`;
-    })
-    .join("\n");
-  if (memory.trim().length > 0) {
-    memory = `Let's continue our previous conversation where ${memory}`;
-    memory += "\nNow I want to follow-up with:";
-  }
-  if (memory.trim().length === 0) {
-    memory = memory.trim();
-  }
-  return `USER: ${memory}${prompt}\nASSISTANT:`;
+export function buildPrompt(
+  prompt: string,
+  messages: Message[]
+): PromptMessage[] {
+  return [...messages, { user: "human", text: prompt }].map((message) => {
+    return {
+      role: message.user === "human" ? "user" : "assistant",
+      content: message.text,
+    };
+  });
 }
 
 /**
@@ -48,12 +42,7 @@ export async function askBot({
   }
 
   const input = {
-    messages: [
-      {
-        role: "user",
-        content: prompt,
-      },
-    ],
+    messages: prompt,
     stream: false,
     model: "gpt-3.5-turbo",
     max_tokens: 2000,
@@ -84,5 +73,5 @@ export async function askBot({
  * this function should be removed or replaced with a proper cache warm-up implementation.
  */
 export async function wakeUp() {
-  return askBot({ prompt: "Hello!", onAnswerUpdate: () => {} });
+  return askBot({ prompt: [], onAnswerUpdate: () => {} });
 }
