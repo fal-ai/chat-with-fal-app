@@ -36,6 +36,7 @@
   },
   "devDependencies": {
     "organize-imports-cli": "^0.10.0",
-    "prettier": "^2.8.8"
+    "prettier": "^2.8.8",
+    "vercel": "^31.0.4"
   }
 }
