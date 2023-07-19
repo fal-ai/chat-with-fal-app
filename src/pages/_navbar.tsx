@@ -20,9 +20,9 @@ export default function NavBar() {
             <span className="opacity-70">powered by </span>
             <a
               className="link font-medium opacity-70 hover:opacity-100"
-              href="https://docs.fal.ai/fal-serverless/quickstart"
+              href="https://fal.ai"
             >
-              fal-serverless
+              fal
             </a>
           </span>
         </div>

@@ -104,7 +104,7 @@ export function TypingChatMessage(props: TypingChatMessageProps) {
           setIsTyping(false);
         }
       }
-    }, 20);
+    }, 15);
 
     return () => clearInterval(intervalId);
   }, [contentToType, isContentFullyLoaded]);

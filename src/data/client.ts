@@ -43,27 +43,57 @@ export async function askBot({
 
   const input = {
     messages: prompt,
-    stream: false,
+    stream: true,
     model: "gpt-3.5-turbo",
     max_tokens: 2000,
   };
-  const response = await fetch("/api/chat", {
+
+  const response = await fetch(url, {
     method: "POST",
     headers: {
-      accept: "application/json",
+      accept: "text/event-stream",
       "content-type": "application/json",
     },
+    credentials: "omit",
     body: JSON.stringify(input),
   });
   if (!response.ok) {
     const content = await response.text();
     throw new Error(content);
   }
-  const result = await response.json();
-  const answer = result.choices
-    .map((choice: any) => choice.message.content)
-    .join("\n");
-  onAnswerUpdate(answer, answer);
+
+  const reader = response.body!.getReader();
+  const decoder = new TextDecoder("utf-8");
+  let chunk = "";
+  let answer = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) {
+      break;
+    }
+    chunk = decoder.decode(value);
+    if (chunk === "data: [DONE]") {
+      break;
+    }
+    // https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#event_stream_format
+    chunk = chunk
+      .split("data: ")
+      .filter((c) => c.trim().length > 0)
+      .map((c) => {
+        try {
+          return JSON.parse(c);
+        } catch (e) {
+          return null;
+        }
+      })
+      .filter((c) => c !== null)
+      .flatMap((c) => c.choices.map((choice: any) => choice.delta.content))
+      .join("");
+
+    answer += chunk;
+    onAnswerUpdate(chunk, answer);
+  }
+
   return answer;
 }
 
