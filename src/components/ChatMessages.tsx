@@ -56,17 +56,17 @@ export default function ChatMessages(props: ChatMessagesProps) {
         <div className="space-y-2">
           <p>
             Hi! I am a Chat Bot powered by{" "}
-            <a className="link font-medium" href="https://serverless.fal.ai">
+            <a className="link font-medium" href="https://fal.ai">
               fal-serverless
             </a>{" "}
             and the{" "}
             <a
               className="link font-medium"
-              href="https://huggingface.co/TheBloke/vicuna-13B-1.1-HF"
+              href="https://huggingface.co/TheBloke/Llama-2-13B-chat-GGML"
             >
-              TheBloke/vicuna-13B-1.1-HF
+              TheBloke/Llama-2-13B-chat-GGML
             </a>{" "}
-            model.
+            model on a <strong>Nvidia Tesla T4 GPU</strong>.
           </p>
           <p>Send me a message and let&apos;s get started.</p>
         </div>
