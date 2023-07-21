@@ -1,3 +1,4 @@
+import { createParser } from "eventsource-parser";
 import { Message } from "./types";
 
 type OnAnswerUpdate = (chunk: string, aggregate: string) => void;
@@ -65,36 +66,39 @@ export async function askBot({
     throw new Error("Response body is empty");
   }
 
-  const reader = response.body.getReader();
   const decoder = new TextDecoder("utf-8");
-  let chunk = "";
+
   let answer = "";
+  const parser = createParser((event) => {
+    if (event.type === "event") {
+      const data = event.data;
+
+      try {
+        const json = JSON.parse(data);
+        if (json.choices[0].finish_reason != null) {
+          return;
+        }
+        const text = json.choices?.length
+          ? json.choices[0]?.delta?.content
+          : "";
+        if (text) {
+          answer += text;
+          onAnswerUpdate(text, answer);
+        }
+      } catch (e) {
+        // TODO handle error
+        console.log("Chunk parsing error", e);
+      }
+    }
+  });
+
+  const reader = response.body.getReader();
   while (true) {
     const { done, value } = await reader.read();
     if (done) {
       break;
     }
-    chunk = decoder.decode(value);
-    if (chunk === "data: [DONE]") {
-      break;
-    }
-    // https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#event_stream_format
-    chunk = chunk
-      .split("data: ")
-      .filter((c) => c.trim().length > 0)
-      .map((c) => {
-        try {
-          return JSON.parse(c);
-        } catch (e) {
-          return null;
-        }
-      })
-      .filter((c) => c !== null)
-      .flatMap((c) => c.choices.map((choice: any) => choice.delta.content))
-      .join("");
-
-    answer += chunk;
-    onAnswerUpdate(chunk, answer);
+    parser.feed(decoder.decode(value));
   }
 
   return answer;

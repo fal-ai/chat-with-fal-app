@@ -61,7 +61,7 @@ export default function Home() {
             messages: messages.slice(0, -1),
           });
         }
-      }
+      },
     },
   });
   const [state, send] = useActor(chatService);
