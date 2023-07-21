@@ -1,4 +1,4 @@
-import type { NextApiHandler, PageConfig } from "next";
+import type { NextApiHandler } from "next";
 
 const url = process.env.NEXT_PUBLIC_CHAT_FUNCTION_URL ?? "";
 

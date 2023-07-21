@@ -1,11 +1,12 @@
 import ChatMessages from "@/components/ChatMessages";
-import { askBot, buildPrompt, wakeUp } from "@/data/client";
+import { askBot, buildPrompt } from "@/data/client";
 import type { SendQuestionEvent } from "@/state/ChatState";
 import { chatMachine } from "@/state/ChatState";
 import { GlobalStateContext } from "@/state/global";
 import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
 import { useActor, useInterpret } from "@xstate/react";
 import { KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
+import Sticky from "react-sticky-el";
 
 export default function Home() {
   const [prompt, setPrompt] = useState("");
@@ -89,44 +90,52 @@ export default function Home() {
       ? "stroke-gray-700 dark:stroke-neutral-200 opacity-30"
       : "stroke-secondary";
   }, [isLoading, hasPrompt]);
+
+  // Workaround to activate sticky element on initial render
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
+  }, []);
   return (
     <GlobalStateContext.Provider value={{ chatService }}>
       <main className="overflow-hidden w-full h-full relative flex z-0">
         <div className="relative flex h-full max-w-full flex-1 overflow-hidden">
           <div className="container w-full min-h-full mx-auto">
             <ChatMessages messages={messages} />
-            {/* <div className="h-32 w-full"></div> */}
-            <div className="fixed md:max-w-screen-2xl bottom-0 w-full z-50">
-              <div className="flex-col bg-base-100 max-md:show-m px-4 py-2 md:py-6">
-                <div className="flex justify-between space-x-2">
-                  <input
-                    className="input bg-base-200 focus:outline-transparent disabled:border-transparent disabled:placeholder:opacity-80 flex-1 md:text-lg md:py-8"
-                    ref={promptInputRef}
-                    autoComplete="off"
-                    placeholder={promptPlaceholder}
-                    name="prompt"
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    onKeyDown={handleEnterPress}
-                    enterKeyHint="send"
-                    disabled={isLoading}
-                  />
-                  <button
-                    className="btn btn-ghost disabled:bg-transparent hover:bg-transparent rounded-full self-end"
-                    onClick={sendQuestion}
-                    disabled={isLoading || !hasPrompt}
-                  >
-                    <PaperAirplaneIcon
-                      className={`${buttonIconColor} w-6 h-6`}
+            <Sticky mode="bottom">
+              <div className="sticky md:max-w-screen-2xl bottom-0 w-full z-50">
+                <div className="flex-col bg-base-100 max-md:show-m px-4 py-2 md:py-6">
+                  <div className="flex justify-between space-x-2">
+                    <input
+                      className="input bg-base-200 focus:outline-transparent disabled:border-transparent disabled:placeholder:opacity-80 flex-1 md:text-lg md:py-6"
+                      ref={promptInputRef}
+                      autoComplete="off"
+                      placeholder={promptPlaceholder}
+                      name="prompt"
+                      value={prompt}
+                      onChange={(e) => setPrompt(e.target.value)}
+                      onKeyDown={handleEnterPress}
+                      enterKeyHint="send"
+                      disabled={isLoading}
                     />
-                  </button>
+                    <button
+                      className="btn btn-ghost disabled:bg-transparent hover:bg-transparent rounded-full self-end"
+                      onClick={sendQuestion}
+                      disabled={isLoading || !hasPrompt}
+                    >
+                      <PaperAirplaneIcon
+                        className={`${buttonIconColor} w-6 h-6`}
+                      />
+                    </button>
+                  </div>
+                  {/* I had this, then decide to hide it, should delete or unhide it */}
+                  <p className="hidden prose text-sm mt-2 opacity-80">
+                    Press <kbd>Enter</kbd> to send.
+                  </p>
                 </div>
-                {/* I had this, then decide to hide it, should delete or unhide it */}
-                <p className="hidden prose text-sm mt-2 opacity-80">
-                  Press <kbd>Enter</kbd> to send.
-                </p>
               </div>
-            </div>
+            </Sticky>
           </div>
         </div>
       </main>

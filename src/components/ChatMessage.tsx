@@ -96,6 +96,7 @@ export function TypingChatMessage(props: TypingChatMessageProps) {
       setContent(contentToType.slice(0, i));
 
       // TODO increment cursor position depending on the content left and whether it's done or not
+      // const increment = Math.floor(Math.min(Math.random() * 3, contentToType.length)) + 1;
       cursorPosition.current = i = i + 1;
 
       if (i > contentToType.length) {
@@ -104,7 +105,7 @@ export function TypingChatMessage(props: TypingChatMessageProps) {
           setIsTyping(false);
         }
       }
-    }, 15);
+    }, 10);
 
     return () => clearInterval(intervalId);
   }, [contentToType, isContentFullyLoaded]);
