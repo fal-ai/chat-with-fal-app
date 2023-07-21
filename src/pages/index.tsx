@@ -1,12 +1,13 @@
 import ChatMessages from "@/components/ChatMessages";
 import { askBot, buildPrompt } from "@/data/client";
-import type { SendQuestionEvent } from "@/state/ChatState";
+import type { ReceiveErrorEvent, SendQuestionEvent } from "@/state/ChatState";
 import { chatMachine } from "@/state/ChatState";
 import { GlobalStateContext } from "@/state/global";
 import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
 import { useActor, useInterpret } from "@xstate/react";
 import { KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import Sticky from "react-sticky-el";
+import { assign } from "xstate";
 
 export default function Home() {
   const [prompt, setPrompt] = useState("");
@@ -50,6 +51,17 @@ export default function Home() {
       clearPrompt: () => {
         setPrompt("");
       },
+      markMessageAsFailed: (context, event: ReceiveErrorEvent) => {
+        const { messages } = context;
+        const { error } = event;
+        console.error(error);
+        const lastMessage = messages[messages.length - 1];
+        if (lastMessage.user === "bot") {
+          return assign({
+            messages: messages.slice(0, -1),
+          });
+        }
+      }
     },
   });
   const [state, send] = useActor(chatService);
@@ -69,7 +81,8 @@ export default function Home() {
   const sendQuestion = async () => {
     send({ type: "SEND_QUESTION", prompt });
   };
-
+  console.log("-----------------------------");
+  console.log(`state: ${state.value}`);
   const isLoading =
     state.matches("botAnswering.thinking") ||
     state.matches("botAnswering.typing");

@@ -61,7 +61,11 @@ export async function askBot({
     throw new Error(content);
   }
 
-  const reader = response.body!.getReader();
+  if (!response.body) {
+    throw new Error("Response body is empty");
+  }
+
+  const reader = response.body.getReader();
   const decoder = new TextDecoder("utf-8");
   let chunk = "";
   let answer = "";

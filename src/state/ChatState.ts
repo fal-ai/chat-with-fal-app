@@ -19,13 +19,14 @@ export type ReceiveFullResponseEvent = {
   type: "RECEIVE_FULL_RESPONSE";
   answer: string;
 };
+export type ReceiveErrorEvent = { type: "RECEIVE_ERROR"; error: Error };
 export type TypingDoneEvent = { type: "TYPING_DONE"; answer: string };
 
 export type ChatEvent =
   | SendQuestionEvent
   | ReceivePartialResponseEvent
   | ReceiveFullResponseEvent
-  | { type: "RECEIVE_ERROR"; error: Error }
+  | ReceiveErrorEvent
   | TypingDoneEvent
   | { type: "RETRY" };
 
@@ -107,6 +108,10 @@ export const chatMachine = createMachine<ChatContext, ChatEvent>(
               RETRY: {
                 target: "thinking",
                 actions: ["retryMessage"],
+              },
+              SEND_QUESTION: {
+                target: "thinking",
+                actions: ["addQuestion", "clearPrompt", "saveChat"],
               },
             },
           },
