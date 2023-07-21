@@ -50,7 +50,7 @@ export default function ChatMessages(props: ChatMessagesProps) {
   return (
     <div
       ref={scrollableRef}
-      className="relative w-full transition-width overflow-hidden flex flex-1 flex-col items-stretch"
+      className="relative w-full h-full transition-width overflow-hidden flex flex-1 flex-col items-stretch"
     >
       <div className="flex-1 grow overflow-hidden bg-base-200 space-y-8 lg:space-y-10 pt-24 pb-32 md:pb-40 max-md:px-4">
         <div className="space-y-2">

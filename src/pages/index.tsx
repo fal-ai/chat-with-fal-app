@@ -99,8 +99,8 @@ export default function Home() {
   }, []);
   return (
     <GlobalStateContext.Provider value={{ chatService }}>
-      <main className="overflow-hidden w-full h-full relative flex z-0">
-        <div className="relative flex h-full max-w-full flex-1 overflow-hidden">
+      <main className="overflow-hidden w-full h-full min-h-screen relative flex z-0">
+        <div className="relative flex min-h-[90vh] max-w-full flex-1 overflow-hidden">
           <div className="container w-full min-h-full mx-auto">
             <ChatMessages messages={messages} />
             <Sticky mode="bottom">
