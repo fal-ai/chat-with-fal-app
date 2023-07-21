@@ -54,7 +54,6 @@ export async function askBot({
       accept: "text/event-stream",
       "content-type": "application/json",
     },
-    credentials: "omit",
     body: JSON.stringify(input),
   });
   if (!response.ok) {
