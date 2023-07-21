@@ -10,7 +10,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 import ThinkingAnimation from "./ThinkingAnimation";
@@ -58,68 +57,50 @@ export const MemoizedChatMessage = memo(
   (prevProps, nextProps) => prevProps.children === nextProps.children
 );
 
-export interface TypingChatMessageProps {
+export interface BotChatMessageProps {
   content: string;
+  done: boolean;
 }
 
-export function TypingChatMessage(props: TypingChatMessageProps) {
+function TypingChatMessage(props: BotChatMessageProps) {
+  const { done } = props;
   // Shared state
   const { chatService } = useContext(GlobalStateContext);
   const [state] = useActor(chatService);
 
   // Local state
   const [content, setContent] = useState(props.content);
-  const [contentToType, setContentToType] = useState(props.content);
-  const [isContentFullyLoaded, setIsContentFullyLoaded] = useState(false);
   const [isTyping, setIsTyping] = useState(true);
 
-  // Long term references
-  const cursorPosition = useRef<number>(0);
-
   useEffect(() => {
+    if (done) {
+      return;
+    }
     chatService.onEvent((event: any) => {
       if (isPartialResponse(event)) {
-        setContentToType((prevContent) => prevContent + event.chunk);
+        setContent((prevContent) => prevContent + event.chunk);
       }
       if (isFullResponse(event)) {
-        setIsContentFullyLoaded(true);
-        setContentToType(event.answer);
+        setIsTyping(false);
+        setContent(event.answer);
+        chatService.send({ type: "TYPING_DONE", answer: event.answer });
       }
     });
-  }, [chatService]);
+  }, [chatService, done]);
 
-  useEffect(() => {
-    setIsTyping(true);
-
-    const intervalId = setInterval(() => {
-      let i = cursorPosition.current;
-      setContent(contentToType.slice(0, i));
-
-      // TODO increment cursor position depending on the content left and whether it's done or not
-      // const increment = Math.floor(Math.min(Math.random() * 3, contentToType.length)) + 1;
-      cursorPosition.current = i = i + 1;
-
-      if (i > contentToType.length) {
-        clearInterval(intervalId);
-        if (isContentFullyLoaded) {
-          setIsTyping(false);
-        }
-      }
-    }, 10);
-
-    return () => clearInterval(intervalId);
-  }, [contentToType, isContentFullyLoaded]);
-
-  useEffect(() => {
-    if (isContentFullyLoaded && !isTyping) {
-      setContent(contentToType);
-      chatService.send({ type: "TYPING_DONE", answer: contentToType });
-    }
-  }, [isContentFullyLoaded, isTyping, chatService, contentToType]);
+  if (props.content && props.done) {
+    return <ChatMessage user="bot">{props.content}</ChatMessage>;
+  }
 
   let children: React.ReactNode = content;
-  if (state.matches("botAnswering.thinking")) {
+  const isThinking = state.matches("botAnswering.thinking");
+  if (isThinking) {
     children = <ThinkingAnimation />;
   }
   return <ChatMessage user="bot">{children}</ChatMessage>;
 }
+
+export const BotChatMessage = memo(
+  TypingChatMessage,
+  (prevProps, nextProps) => prevProps.content === nextProps.content
+);

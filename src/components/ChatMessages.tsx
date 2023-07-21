@@ -3,8 +3,8 @@ import { GlobalStateContext } from "@/state/global";
 import { useActor } from "@xstate/react";
 import { useContext, useEffect, useRef } from "react";
 import {
+  BotChatMessage,
   MemoizedChatMessage as ChatMessage,
-  TypingChatMessage,
 } from "./ChatMessage";
 
 export type ChatMessagesProps = {
@@ -32,13 +32,14 @@ export default function ChatMessages(props: ChatMessagesProps) {
   }, []);
 
   const renderMessage = (message: Message, index: number) => {
-    const isLastMessage = index === messages.length - 1;
-    if (
-      isLastMessage &&
-      message.user === "bot" &&
-      state.matches("botAnswering")
-    ) {
-      return <TypingChatMessage key={index} content={message.text} />;
+    if (message.user === "bot") {
+      return (
+        <BotChatMessage
+          key={index}
+          content={message.text}
+          done={!state.matches("botAnswering")}
+        />
+      );
     }
     return (
       <ChatMessage key={index} user={message.user}>
