@@ -94,7 +94,7 @@ export default function Home() {
   // Workaround to activate sticky element on initial render
   useEffect(() => {
     if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, behavior: "instant" });
+      window.scrollTo({ top: 0, behavior: "instant" as any });
     }
   }, []);
   return (
